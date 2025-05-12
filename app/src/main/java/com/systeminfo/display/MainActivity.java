@@ -226,7 +226,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                     if (data.has("memoryUsage")) {
                         float memoryUsage = data.get("memoryUsage").getAsFloat();
                         memoryProgress.setProgress(memoryUsage);
-                        // No utilization graph for memoryProgress
+                        memoryProgress.addUtilizationSample(memoryUsage);
                     }
                     
                     // Update GPU 1

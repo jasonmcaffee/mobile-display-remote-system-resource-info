@@ -209,6 +209,14 @@ public class CircularProgressView extends View {
 
     public void setProgress(float progress) {
         this.progress = progress;
+        // If history is empty, fill it with the first value so the graph shows immediately
+        if (!historyInitialized && historyIndex == 0) {
+            for (int i = 0; i < HISTORY_SIZE; i++) {
+                utilizationHistory[i] = progress;
+            }
+            historyIndex = 1;
+            historyInitialized = true;
+        }
         invalidate();
     }
 
