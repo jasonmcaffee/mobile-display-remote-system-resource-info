@@ -169,14 +169,14 @@ public class CircularProgressView extends View {
             clipPath.addCircle(cx, cy, radius, Path.Direction.CW);
             canvas.clipPath(clipPath, Region.Op.INTERSECT);
 
-            // 1. Draw the entire circle with the grey fill first
-            Paint bowlPaint = new Paint();
-            bowlPaint.setColor(0xFFF2F2F2);
-            bowlPaint.setStyle(Paint.Style.FILL);
-            bowlPaint.setAntiAlias(true);
-            canvas.drawCircle(cx, cy, radius * 0.96f, bowlPaint); // 0.96 to avoid border overlap
+            // 1. Draw a white circle as the background
+            Paint whitePaint = new Paint();
+            whitePaint.setColor(0xFFFFFFFF);
+            whitePaint.setStyle(Paint.Style.FILL);
+            whitePaint.setAntiAlias(true);
+            canvas.drawCircle(cx, cy, radius * 0.96f, whitePaint); // 0.96 to avoid border overlap
 
-            // 2. Prepare for utilization cutout
+            // 2. Prepare for utilization bowl path
             float margin = radius * 0.03f; // Reduced margin for tighter fit
             float graphRadius = radius - margin;
             float graphLeft = cx - graphRadius;
@@ -216,13 +216,13 @@ public class CircularProgressView extends View {
             }
             if (validStart == -1 || validEnd == -1 || validEnd - validStart < 1) return;
 
-            // 3. Draw the utilization path as a white cutout above the utilization line
-            Path cutoutPath = new Path();
-            cutoutPath.moveTo(xs[validStart], ys[validStart]);
+            // 3. Draw the bowl path (area under the utilization line)
+            Path bowlPath = new Path();
+            bowlPath.moveTo(xs[validStart], ys[validStart]);
             for (int i = validStart + 1; i <= validEnd; i++) {
-                cutoutPath.lineTo(xs[i], ys[i]);
+                bowlPath.lineTo(xs[i], ys[i]);
             }
-            // Draw the top arc of the circle from rightmost to leftmost using fine angle steps
+            // Draw the bottom arc of the circle from rightmost to leftmost using fine angle steps
             float leftRelX = (xs[validStart] - cx) / graphRadius;
             float rightRelX = (xs[validEnd] - cx) / graphRadius;
             leftRelX = Math.max(-1f, Math.min(1f, leftRelX));
@@ -237,14 +237,14 @@ public class CircularProgressView extends View {
                 float angle = leftAngle + t * (rightAngle - leftAngle);
                 float arcX = cx + graphRadius * (float)Math.cos(angle);
                 float arcY = cy + graphRadius * (float)Math.sin(angle);
-                cutoutPath.lineTo(arcX, arcY);
+                bowlPath.lineTo(arcX, arcY);
             }
-            cutoutPath.close();
-            Paint cutoutPaint = new Paint();
-            cutoutPaint.setColor(0xFFFFFFFF);
-            cutoutPaint.setStyle(Paint.Style.FILL);
-            cutoutPaint.setAntiAlias(true);
-            canvas.drawPath(cutoutPath, cutoutPaint);
+            bowlPath.close();
+            Paint bowlPaint = new Paint();
+            bowlPaint.setColor(0xFFF2F2F2);
+            bowlPaint.setStyle(Paint.Style.FILL);
+            bowlPaint.setAntiAlias(true);
+            canvas.drawPath(bowlPath, bowlPaint);
 
             // 4. Draw a thin, darker border for the graph
             Paint borderPaint = new Paint();
