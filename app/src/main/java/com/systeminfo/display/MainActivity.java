@@ -23,6 +23,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import android.content.pm.ActivityInfo;
 
 public class MainActivity extends Activity implements SensorEventListener {
     private static final String TAG = "MainActivity";
@@ -55,7 +56,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         }
         
-        // Initialize WakeLock with FULL_WAKE_LOCK (deprecated but works on older devices)
+        // Initialize WakeLock
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(
             PowerManager.FULL_WAKE_LOCK | 
@@ -63,7 +64,6 @@ public class MainActivity extends Activity implements SensorEventListener {
             PowerManager.ON_AFTER_RELEASE,
             "SystemInfoDisplay:WakeLockTag");
         
-        // This must be called before setContentView
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                            WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -95,10 +95,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                 .build();
 
         handler = new Handler(Looper.getMainLooper());
-
-        // Automatically start polling when the app starts
         startPolling();
-        isConnected = true;
     }
 
     @Override
