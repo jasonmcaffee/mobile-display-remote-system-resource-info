@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -38,24 +39,26 @@ public class CircularProgressView extends View {
         backgroundPaint.setAntiAlias(true);
 
         progressPaint = new Paint();
-        progressPaint.setColor(0xFF2196F3); // Material Blue
+        progressPaint.setColor(0xFF222222); // Very dark gray/black for progress
         progressPaint.setStyle(Paint.Style.STROKE);
         progressPaint.setStrokeWidth(12f);
         progressPaint.setAntiAlias(true);
 
         memoryPaint = new Paint();
-        memoryPaint.setColor(0xFF4CAF50); // Material Green
+        memoryPaint.setColor(0xFF222222); // Use same as progress for consistency
         memoryPaint.setStyle(Paint.Style.STROKE);
         memoryPaint.setStrokeWidth(12f);
         memoryPaint.setAntiAlias(true);
 
         textPaint = new Paint();
-        textPaint.setColor(0xFF424242); // Dark gray text
+        textPaint.setColor(0xFF111111); // Black for text
         textPaint.setTextAlign(Paint.Align.CENTER);
         textPaint.setAntiAlias(true);
+        textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
 
         rectF = new RectF();
         memoryRectF = new RectF();
+        setBackgroundColor(0xFFFFFFFF); // White background
     }
 
     @Override
@@ -93,19 +96,27 @@ public class CircularProgressView extends View {
         
         // Draw usage progress arc
         canvas.drawArc(rectF, -90, progress * 3.6f, false, progressPaint);
-        
-        // Draw label
-        textPaint.setTextSize(getWidth() / 10f);
-        canvas.drawText(label, getWidth() / 2f, getHeight() / 4f, textPaint);
-        
-        // Draw value
-        textPaint.setTextSize(getWidth() / 8f);
+
+        // Draw label at the top (all caps, bold)
+        textPaint.setTextSize(getWidth() / 14f);
+        textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+        String labelText = label == null ? "" : label.toUpperCase();
+        float labelY = getHeight() / 6f;
+        canvas.drawText(labelText, getWidth() / 2f, labelY, textPaint);
+
+        // Draw value in the center
         if (isGpu) {
-            canvas.drawText(String.format("%s GB • %d%%", memoryUsed, (int)progress), 
-                          getWidth() / 2f, getHeight() * 0.6f, textPaint);
+            textPaint.setTextSize(getWidth() / 8f);
+            textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+            String valueText = String.format("%s GB • %d%%", memoryUsed, (int)progress);
+            float valueY = getHeight() / 2f + getWidth() / 16f;
+            canvas.drawText(valueText, getWidth() / 2f, valueY, textPaint);
         } else {
-            canvas.drawText(String.format("%d%%", (int)progress), 
-                          getWidth() / 2f, getHeight() * 0.6f, textPaint);
+            textPaint.setTextSize(getWidth() / 7f);
+            textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+            String percentText = String.format("%d%%", (int)progress);
+            float percentY = getHeight() / 2f + getWidth() / 14f;
+            canvas.drawText(percentText, getWidth() / 2f, percentY, textPaint);
         }
     }
 
