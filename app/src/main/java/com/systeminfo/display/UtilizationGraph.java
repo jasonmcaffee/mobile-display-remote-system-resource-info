@@ -44,7 +44,7 @@ public class UtilizationGraph {
             float graphTop = cy - graphRadius;
             float graphWidth = graphRight - graphLeft;
             float graphHeight = graphBottom - graphTop;
-            float baselineY = graphTop + (graphHeight * 0.35f);
+            float baselineY = graphTop + (graphHeight * 0.45f);
             float availableHeight = graphBottom - baselineY;
 
             int count = historyInitialized ? HISTORY_SIZE : historyIndex;
