@@ -31,7 +31,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     private CircularProgressView cpuProgress;
     private CircularProgressView memoryProgress;
-    private CircularProgressView diskProgress;
     private CircularProgressView gpu1Progress;
     private CircularProgressView gpu2Progress;
     private OkHttpClient client;
@@ -77,14 +76,12 @@ public class MainActivity extends Activity implements SensorEventListener {
         // Initialize views
         cpuProgress = findViewById(R.id.cpuProgress);
         memoryProgress = findViewById(R.id.memoryProgress);
-        diskProgress = findViewById(R.id.diskProgress);
         gpu1Progress = findViewById(R.id.gpu1Progress);
         gpu2Progress = findViewById(R.id.gpu2Progress);
 
         // Set labels
         cpuProgress.setLabel("CPU");
         memoryProgress.setLabel("Mem");
-        diskProgress.setLabel("Disk");
         gpu1Progress.setLabel("GPU 1");
         gpu2Progress.setLabel("GPU 2");
 
@@ -230,17 +227,6 @@ public class MainActivity extends Activity implements SensorEventListener {
                         memoryProgress.setProgress(memoryUsage);
                     }
                     
-                    // Update Disk
-                    if (data.has("diskSpace")) {
-                        String diskSpace = data.get("diskSpace").getAsString();
-                        try {
-                            float diskUsage = Float.parseFloat(diskSpace.replace("%", "").trim());
-                            diskProgress.setProgress(diskUsage);
-                        } catch (NumberFormatException e) {
-                            Log.e(TAG, "Error parsing disk usage: " + diskSpace);
-                        }
-                    }
-                    
                     // Update GPU 1
                     if (data.has("gpu1")) {
                         JsonObject gpu1 = data.getAsJsonObject("gpu1");
@@ -289,7 +275,6 @@ public class MainActivity extends Activity implements SensorEventListener {
     private void resetInfoTexts() {
         cpuProgress.setProgress(0);
         memoryProgress.setProgress(0);
-        diskProgress.setProgress(0);
         gpu1Progress.setProgress(0);
         gpu2Progress.setProgress(0);
     }

@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:background="#FFFFFF"
     android:gravity="center"
-    android:padding="16dp"
+    android:padding="4dp"
     android:keepScreenOn="true">
 
     <LinearLayout
@@ -25,7 +25,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:layout_margin="8dp" />
+                android:layout_margin="2dp" />
         </FrameLayout>
 
         <FrameLayout
@@ -38,20 +38,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:layout_margin="8dp" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
-
-            <com.systeminfo.display.CircularProgressView
-                android:id="@+id/diskProgress"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:layout_margin="8dp" />
+                android:layout_margin="2dp" />
         </FrameLayout>
     </LinearLayout>
 
@@ -72,7 +59,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:layout_margin="8dp" />
+                android:layout_margin="2dp" />
         </FrameLayout>
 
         <FrameLayout
@@ -85,7 +72,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:layout_margin="8dp" />
+                android:layout_margin="2dp" />
         </FrameLayout>
     </LinearLayout>
 

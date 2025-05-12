@@ -34,19 +34,19 @@ public class CircularProgressView extends View {
         backgroundPaint = new Paint();
         backgroundPaint.setColor(0xFFE0E0E0); // Light gray background
         backgroundPaint.setStyle(Paint.Style.STROKE);
-        backgroundPaint.setStrokeWidth(8f);
+        backgroundPaint.setStrokeWidth(12f);
         backgroundPaint.setAntiAlias(true);
 
         progressPaint = new Paint();
         progressPaint.setColor(0xFF2196F3); // Material Blue
         progressPaint.setStyle(Paint.Style.STROKE);
-        progressPaint.setStrokeWidth(8f);
+        progressPaint.setStrokeWidth(12f);
         progressPaint.setAntiAlias(true);
 
         memoryPaint = new Paint();
         memoryPaint.setColor(0xFF4CAF50); // Material Green
         memoryPaint.setStyle(Paint.Style.STROKE);
-        memoryPaint.setStrokeWidth(8f);
+        memoryPaint.setStrokeWidth(12f);
         memoryPaint.setAntiAlias(true);
 
         textPaint = new Paint();
@@ -99,7 +99,7 @@ public class CircularProgressView extends View {
         canvas.drawText(label, getWidth() / 2f, getHeight() / 4f, textPaint);
         
         // Draw value
-        textPaint.setTextSize(getWidth() / 6f);
+        textPaint.setTextSize(getWidth() / 8f);
         if (isGpu) {
             canvas.drawText(String.format("%s GB • %d%%", memoryUsed, (int)progress), 
                           getWidth() / 2f, getHeight() * 0.6f, textPaint);
