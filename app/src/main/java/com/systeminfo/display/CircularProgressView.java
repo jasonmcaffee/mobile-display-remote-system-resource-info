@@ -160,51 +160,104 @@ public class CircularProgressView extends View {
     }
 
     private void drawUtilizationGraph(Canvas canvas, RectF bounds) {
-        // Clip to the circle so the graph doesn't draw outside
-        int save = canvas.save();
-        Path clipPath = new Path();
-        float cx = bounds.centerX();
-        float cy = bounds.centerY();
-        float radius = (bounds.width() / 2f);
-        clipPath.addCircle(cx, cy, radius, Path.Direction.CW);
-        canvas.clipPath(clipPath, Region.Op.INTERSECT);
+        try {
+            int save = canvas.save();
+            Path clipPath = new Path();
+            float cx = bounds.centerX();
+            float cy = bounds.centerY();
+            float radius = (bounds.width() / 2f);
+            clipPath.addCircle(cx, cy, radius, Path.Direction.CW);
+            canvas.clipPath(clipPath, Region.Op.INTERSECT);
 
-        // Draw the filled graph (lighter than outline)
-        Paint graphPaint = new Paint();
-        graphPaint.setColor(0xFFF2F2F2); // Lighter gray for graph fill
-        graphPaint.setStyle(Paint.Style.FILL);
-        graphPaint.setAntiAlias(true);
+            // 1. Draw the entire circle with the grey fill first
+            Paint bowlPaint = new Paint();
+            bowlPaint.setColor(0xFFF2F2F2);
+            bowlPaint.setStyle(Paint.Style.FILL);
+            bowlPaint.setAntiAlias(true);
+            canvas.drawCircle(cx, cy, radius * 0.96f, bowlPaint); // 0.96 to avoid border overlap
 
-        float graphLeft = bounds.left;
-        float graphTop = bounds.top;
-        float graphRight = bounds.right;
-        float graphBottom = bounds.bottom;
-        float graphWidth = graphRight - graphLeft;
-        float graphHeight = graphBottom - graphTop;
+            // 2. Prepare for utilization cutout
+            float margin = radius * 0.03f; // Reduced margin for tighter fit
+            float graphRadius = radius - margin;
+            float graphLeft = cx - graphRadius;
+            float graphRight = cx + graphRadius;
+            float graphBottom = cy + graphRadius;
+            float graphTop = cy - graphRadius;
+            float graphWidth = graphRight - graphLeft;
+            float graphHeight = graphBottom - graphTop;
+            float baselineY = graphTop + (graphHeight * 0.35f);
+            float availableHeight = graphBottom - baselineY;
 
-        Path graphPath = new Path();
-        graphPath.moveTo(graphLeft, graphBottom);
-        int count = historyInitialized ? HISTORY_SIZE : historyIndex;
-        float step = count > 1 ? graphWidth / (count - 1) : graphWidth;
-        for (int i = 0; i < count; i++) {
-            int idx = (historyIndex + i) % HISTORY_SIZE;
-            float x = graphLeft + i * step;
-            float y = graphBottom - (utilizationHistory[idx] / 100f) * graphHeight;
-            graphPath.lineTo(x, y);
+            int count = historyInitialized ? HISTORY_SIZE : historyIndex;
+            if (count < 2) return;
+            float[] xs = new float[count];
+            float[] ys = new float[count];
+            float step = graphWidth / (count - 1);
+
+            // Only sample points within the circle
+            int validStart = -1, validEnd = -1;
+            for (int i = 0; i < count; i++) {
+                xs[i] = graphLeft + i * step;
+                float relX = (xs[i] - cx) / graphRadius;
+                if (Math.abs(relX) <= 1f) {
+                    if (validStart == -1) validStart = i;
+                    validEnd = i;
+                }
+                int idx = (historyIndex + i) % HISTORY_SIZE;
+                float util = utilizationHistory[idx];
+                if (util < 0f) util = 0f;
+                if (util > 100f) util = 100f;
+                float unclampedY = graphBottom - (util / 100f) * availableHeight;
+                // Clamp y so it never goes below the circle's bottom edge
+                float relXForClamp = (xs[i] - cx) / graphRadius;
+                relXForClamp = Math.max(-1f, Math.min(1f, relXForClamp));
+                float circleY = cy + graphRadius * (float)Math.sqrt(1 - relXForClamp * relXForClamp);
+                ys[i] = Math.min(unclampedY, circleY);
+            }
+            if (validStart == -1 || validEnd == -1 || validEnd - validStart < 1) return;
+
+            // 3. Draw the utilization path as a white cutout above the utilization line
+            Path cutoutPath = new Path();
+            cutoutPath.moveTo(xs[validStart], ys[validStart]);
+            for (int i = validStart + 1; i <= validEnd; i++) {
+                cutoutPath.lineTo(xs[i], ys[i]);
+            }
+            // Draw the top arc of the circle from rightmost to leftmost using fine angle steps
+            float leftRelX = (xs[validStart] - cx) / graphRadius;
+            float rightRelX = (xs[validEnd] - cx) / graphRadius;
+            leftRelX = Math.max(-1f, Math.min(1f, leftRelX));
+            rightRelX = Math.max(-1f, Math.min(1f, rightRelX));
+            float leftAngle = (float)Math.acos(leftRelX);
+            float rightAngle = (float)Math.acos(rightRelX);
+            if (ys[validStart] < cy) leftAngle = (float)(2 * Math.PI - leftAngle);
+            if (ys[validEnd] < cy) rightAngle = (float)(2 * Math.PI - rightAngle);
+            int arcSteps = 60;
+            for (int i = arcSteps; i >= 0; i--) {
+                float t = (float)i / arcSteps;
+                float angle = leftAngle + t * (rightAngle - leftAngle);
+                float arcX = cx + graphRadius * (float)Math.cos(angle);
+                float arcY = cy + graphRadius * (float)Math.sin(angle);
+                cutoutPath.lineTo(arcX, arcY);
+            }
+            cutoutPath.close();
+            Paint cutoutPaint = new Paint();
+            cutoutPaint.setColor(0xFFFFFFFF);
+            cutoutPaint.setStyle(Paint.Style.FILL);
+            cutoutPaint.setAntiAlias(true);
+            canvas.drawPath(cutoutPath, cutoutPaint);
+
+            // 4. Draw a thin, darker border for the graph
+            Paint borderPaint = new Paint();
+            borderPaint.setColor(0xFFB0B0B0);
+            borderPaint.setStyle(Paint.Style.STROKE);
+            borderPaint.setStrokeWidth(2f);
+            borderPaint.setAntiAlias(true);
+            canvas.drawCircle(cx, cy, graphRadius, borderPaint);
+
+            canvas.restoreToCount(save);
+        } catch (Exception e) {
+            android.util.Log.e("CircularProgressView", "Exception in drawUtilizationGraph", e);
         }
-        graphPath.lineTo(graphRight, graphBottom);
-        graphPath.close();
-        canvas.drawPath(graphPath, graphPaint);
-
-        // Draw a thin, darker border for the graph
-        Paint borderPaint = new Paint();
-        borderPaint.setColor(0xFFB0B0B0); // Darker gray for border
-        borderPaint.setStyle(Paint.Style.STROKE);
-        borderPaint.setStrokeWidth(2f);
-        borderPaint.setAntiAlias(true);
-        canvas.drawPath(graphPath, borderPaint);
-
-        canvas.restoreToCount(save);
     }
 
     public void setProgress(float progress) {
