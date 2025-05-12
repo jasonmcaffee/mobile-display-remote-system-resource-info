@@ -6,7 +6,6 @@ import android.os.Looper;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.Window;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.app.Activity;
@@ -35,7 +34,6 @@ public class MainActivity extends Activity implements SensorEventListener {
     private TextView diskInfo;
     private TextView networkInfo;
     private TextView uptimeInfo;
-    private Button connectButton;
     private OkHttpClient client;
     private Handler handler;
     private boolean isConnected = false;
@@ -84,7 +82,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         diskInfo = findViewById(R.id.diskInfo);
         networkInfo = findViewById(R.id.networkInfo);
         uptimeInfo = findViewById(R.id.uptimeInfo);
-        connectButton = findViewById(R.id.connectButton);
 
         // Initialize OkHttpClient
         client = new OkHttpClient.Builder()
@@ -94,20 +91,10 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         handler = new Handler(Looper.getMainLooper());
 
-        connectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!isConnected) {
-                    startPolling();
-                    connectButton.setText("Disconnect");
-                    isConnected = true;
-                } else {
-                    stopPolling();
-                    connectButton.setText("Connect to PC");
-                    isConnected = false;
-                }
-            }
-        });
+        // Automatically start polling when the app starts
+        startPolling();
+        isConnected = true;
+        statusText.setText("Status: Connected");
     }
 
     @Override
@@ -118,6 +105,12 @@ public class MainActivity extends Activity implements SensorEventListener {
         // Register sensor listener
         if (accelerometer != null) {
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+        // Ensure we're still connected
+        if (!isConnected) {
+            startPolling();
+            isConnected = true;
+            statusText.setText("Status: Connected");
         }
     }
 
