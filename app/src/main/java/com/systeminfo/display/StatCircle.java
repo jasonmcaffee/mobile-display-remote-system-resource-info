@@ -3,13 +3,21 @@ package com.systeminfo.display;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 
 public class StatCircle {
     private Paint backgroundPaint;
     private Paint progressPaint;
+    private Paint textPaint;
+    private Paint labelBackgroundPaint;
     private RectF rectF;
+    private RectF labelRectF;
     private float progress = 0;
     private float padding;
+    private String label = "";
+    private String memoryUsed = "";
+    private boolean isGpu = false;
+    private UtilizationGraph utilizationGraph;
 
     public StatCircle(float padding) {
         this.padding = padding;
@@ -29,7 +37,20 @@ public class StatCircle {
         progressPaint.setStrokeWidth(12f);
         progressPaint.setAntiAlias(true);
 
+        labelBackgroundPaint = new Paint();
+        labelBackgroundPaint.setColor(0xFF000000); // Black background
+        labelBackgroundPaint.setStyle(Paint.Style.FILL);
+        labelBackgroundPaint.setAntiAlias(true);
+
+        textPaint = new Paint();
+        textPaint.setColor(0xFF111111); // Black for text
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setAntiAlias(true);
+        textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+
         rectF = new RectF();
+        labelRectF = new RectF();
+        utilizationGraph = new UtilizationGraph();
     }
 
     public void setSize(int width, int height) {
@@ -37,18 +58,83 @@ public class StatCircle {
     }
 
     public void draw(Canvas canvas) {
+        // Draw utilization graph as background
+        utilizationGraph.draw(canvas, rectF);
+
         // Draw background circle
         canvas.drawArc(rectF, 0, 360, false, backgroundPaint);
         
         // Draw progress arc
         canvas.drawArc(rectF, -90, progress * 3.6f, false, progressPaint);
+
+        // Draw label at the top (all caps, bold)
+        textPaint.setTextSize(rectF.width() / 14f);
+        textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+        String labelText = label == null ? "" : label.toUpperCase();
+        
+        // Adjust vertical position based on whether it's GPU or not
+        float labelY = isGpu ? rectF.height() / 5.5f : rectF.height() / 6f;
+        
+        // Calculate text bounds for the label background
+        float textWidth = textPaint.measureText(labelText);
+        float padding = rectF.width() / 40f; // Padding around text
+        float textHeight = textPaint.getTextSize();
+        
+        // Center the text vertically within its background
+        labelRectF.set(
+            rectF.centerX() - textWidth / 2f - padding,
+            labelY - textHeight / 2f - padding,
+            rectF.centerX() + textWidth / 2f + padding,
+            labelY + textHeight / 2f + padding
+        );
+        
+        // Draw black background for label
+        canvas.drawRoundRect(labelRectF, padding, padding, labelBackgroundPaint);
+        
+        // Draw label text in white
+        textPaint.setColor(0xFFFFFFFF);
+        canvas.drawText(labelText, rectF.centerX(), labelY + textHeight / 3f, textPaint);
+
+        // Draw value in the center
+        textPaint.setColor(0xFF111111); // Reset to black for percentage text
+        if (isGpu) {
+            textPaint.setTextSize(rectF.width() / 8f);
+            textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+            String valueText = String.format("%s GB • %d%%", memoryUsed, (int)progress);
+            float valueY = rectF.centerY() + rectF.width() / 16f;
+            canvas.drawText(valueText, rectF.centerX(), valueY, textPaint);
+        } else {
+            textPaint.setTextSize(rectF.width() / 7f);
+            textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
+            String percentText = String.format("%d%%", (int)progress);
+            float percentY = rectF.centerY() + rectF.width() / 14f;
+            canvas.drawText(percentText, rectF.centerX(), percentY, textPaint);
+        }
     }
 
     public void setProgress(float progress) {
         this.progress = progress;
+        utilizationGraph.initializeWithValue(progress);
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+        this.isGpu = label != null && label.startsWith("GPU");
+    }
+
+    public void setMemoryUsed(String memoryUsed) {
+        this.memoryUsed = memoryUsed;
+    }
+
+    public void addUtilizationSample(float utilization) {
+        utilizationGraph.addSample(utilization);
     }
 
     public RectF getRectF() {
         return rectF;
+    }
+
+    public boolean isGpu() {
+        return isGpu;
     }
 } 
