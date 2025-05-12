@@ -115,6 +115,37 @@ A system information display application for Android devices that shows real-tim
    adb -s 0146A54914015003 shell am start -n com.systeminfo.display/com.systeminfo.display.MainActivity
    ```
 
+### Using Batch Files
+
+The project includes two batch files to simplify deployment and server management:
+
+#### deploy.bat
+This script automates the build and deployment process:
+1. Builds the app using Gradle
+2. Automatically finds the first non-emulator device by:
+   - Running `adb devices`
+   - Filtering out emulator devices and empty lines
+   - Taking the first physical device found
+3. Installs the app on the selected device
+4. Launches the app
+
+Usage:
+```powershell
+.\deploy.bat
+```
+
+#### server.bat
+This script manages the Python server:
+1. Creates a Python virtual environment if it doesn't exist
+2. Activates the virtual environment
+3. Installs required dependencies
+4. Starts the server on http://localhost:8080
+
+Usage:
+```powershell
+.\server.bat
+```
+
 ### Starting the Python Server
 
 1. Navigate to the server directory:
