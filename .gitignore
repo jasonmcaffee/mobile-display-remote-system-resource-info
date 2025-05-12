@@ -49,3 +49,9 @@ lint/tmp/
 
 # Android Profiling
 *.hprof 
+
+# Python virtual environment
+venv*/
+env/
+ENV/
+server/venv310/ 
