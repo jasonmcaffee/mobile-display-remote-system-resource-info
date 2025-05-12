@@ -31,5 +31,33 @@
             android:text="Disk Space: --"
             android:layout_marginBottom="8dp"/>
 
+        <TextView
+            android:id="@+id/gpu1Info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="GPU 1 (RTX 3090): --"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/gpu1MemoryInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="GPU 1 Memory: --"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/gpu2Info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="GPU 2 (RTX 3090): --"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/gpu2MemoryInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="GPU 2 Memory: --"
+            android:layout_marginBottom="8dp"/>
+
     </LinearLayout>
 </ScrollView> 
