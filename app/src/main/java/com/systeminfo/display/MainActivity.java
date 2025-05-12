@@ -28,13 +28,11 @@ public class MainActivity extends Activity implements SensorEventListener {
     private static final String TAG = "MainActivity";
     private static final float FLAT_THRESHOLD = 1.5f; // Threshold for detecting flat position
 
-    private TextView cpuInfo;
-    private TextView memoryInfo;
-    private TextView diskInfo;
-    private TextView gpu1Info;
-    private TextView gpu1MemoryInfo;
-    private TextView gpu2Info;
-    private TextView gpu2MemoryInfo;
+    private CircularProgressView cpuProgress;
+    private CircularProgressView memoryProgress;
+    private CircularProgressView diskProgress;
+    private CircularProgressView gpu1Progress;
+    private CircularProgressView gpu2Progress;
     private OkHttpClient client;
     private Handler handler;
     private boolean isConnected = false;
@@ -77,13 +75,18 @@ public class MainActivity extends Activity implements SensorEventListener {
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
 
         // Initialize views
-        cpuInfo = findViewById(R.id.cpuInfo);
-        memoryInfo = findViewById(R.id.memoryInfo);
-        diskInfo = findViewById(R.id.diskInfo);
-        gpu1Info = findViewById(R.id.gpu1Info);
-        gpu1MemoryInfo = findViewById(R.id.gpu1MemoryInfo);
-        gpu2Info = findViewById(R.id.gpu2Info);
-        gpu2MemoryInfo = findViewById(R.id.gpu2MemoryInfo);
+        cpuProgress = findViewById(R.id.cpuProgress);
+        memoryProgress = findViewById(R.id.memoryProgress);
+        diskProgress = findViewById(R.id.diskProgress);
+        gpu1Progress = findViewById(R.id.gpu1Progress);
+        gpu2Progress = findViewById(R.id.gpu2Progress);
+
+        // Set labels
+        cpuProgress.setLabel("CPU");
+        memoryProgress.setLabel("Mem");
+        diskProgress.setLabel("Disk");
+        gpu1Progress.setLabel("GPU 1");
+        gpu2Progress.setLabel("GPU 2");
 
         // Initialize OkHttpClient
         client = new OkHttpClient.Builder()
@@ -217,38 +220,81 @@ public class MainActivity extends Activity implements SensorEventListener {
             public void run() {
                 try {
                     JsonObject data = new Gson().fromJson(jsonData, JsonObject.class);
-                    cpuInfo.setText("CPU Usage: " + data.get("cpuUsage").getAsString() + "%");
-                    memoryInfo.setText("Memory Usage: " + data.get("memoryUsage").getAsString() + "%");
-                    diskInfo.setText("Disk Space: " + data.get("diskSpace").getAsString());
                     
-                    // GPU 1 Info
-                    JsonObject gpu1 = data.getAsJsonObject("gpu1");
-                    gpu1Info.setText("GPU 1 (RTX 3090): " + gpu1.get("usage").getAsString() + "%");
-                    gpu1MemoryInfo.setText("GPU 1 Memory: " + gpu1.get("memoryUsed").getAsString() + 
-                        " / " + gpu1.get("memoryTotal").getAsString() + " GB (" + 
-                        gpu1.get("memoryPercent").getAsString() + "%)");
+                    // Update CPU
+                    if (data.has("cpuUsage")) {
+                        float cpuUsage = data.get("cpuUsage").getAsFloat();
+                        cpuProgress.setProgress(cpuUsage);
+                    }
                     
-                    // GPU 2 Info
-                    JsonObject gpu2 = data.getAsJsonObject("gpu2");
-                    gpu2Info.setText("GPU 2 (RTX 3090): " + gpu2.get("usage").getAsString() + "%");
-                    gpu2MemoryInfo.setText("GPU 2 Memory: " + gpu2.get("memoryUsed").getAsString() + 
-                        " / " + gpu2.get("memoryTotal").getAsString() + " GB (" + 
-                        gpu2.get("memoryPercent").getAsString() + "%)");
+                    // Update Memory
+                    if (data.has("memoryUsage")) {
+                        float memoryUsage = data.get("memoryUsage").getAsFloat();
+                        memoryProgress.setProgress(memoryUsage);
+                    }
+                    
+                    // Update Disk
+                    if (data.has("diskSpace")) {
+                        String diskSpace = data.get("diskSpace").getAsString();
+                        try {
+                            float diskUsage = Float.parseFloat(diskSpace.replace("%", "").trim());
+                            diskProgress.setProgress(diskUsage);
+                        } catch (NumberFormatException e) {
+                            Log.e(TAG, "Error parsing disk usage: " + diskSpace);
+                        }
+                    }
+                    
+                    // Update GPU 1
+                    if (data.has("gpu1")) {
+                        JsonObject gpu1 = data.getAsJsonObject("gpu1");
+                        if (gpu1.has("usage")) {
+                            float gpu1Usage = gpu1.get("usage").getAsFloat();
+                            gpu1Progress.setProgress(gpu1Usage);
+                            
+                            // Update GPU 1 label and memory progress
+                            if (gpu1.has("memoryUsed") && gpu1.has("memoryTotal") && gpu1.has("memoryPercent")) {
+                                String memoryUsed = gpu1.get("memoryUsed").getAsString();
+                                float memoryPercent = gpu1.get("memoryPercent").getAsFloat();
+                                gpu1Progress.setLabel("GPU 1");
+                                gpu1Progress.setMemoryUsed(memoryUsed);
+                                gpu1Progress.setMemoryProgress(memoryPercent);
+                            }
+                        }
+                    }
+                    
+                    // Update GPU 2
+                    if (data.has("gpu2")) {
+                        JsonObject gpu2 = data.getAsJsonObject("gpu2");
+                        if (gpu2.has("usage")) {
+                            float gpu2Usage = gpu2.get("usage").getAsFloat();
+                            gpu2Progress.setProgress(gpu2Usage);
+                            
+                            // Update GPU 2 label and memory progress
+                            if (gpu2.has("memoryUsed") && gpu2.has("memoryTotal") && gpu2.has("memoryPercent")) {
+                                String memoryUsed = gpu2.get("memoryUsed").getAsString();
+                                float memoryPercent = gpu2.get("memoryPercent").getAsFloat();
+                                gpu2Progress.setLabel("GPU 2");
+                                gpu2Progress.setMemoryUsed(memoryUsed);
+                                gpu2Progress.setMemoryProgress(memoryPercent);
+                            }
+                        }
+                    }
+                    
                 } catch (Exception e) {
-                    showError("Error parsing data");
+                    Log.e(TAG, "Error parsing data: " + e.getMessage());
+                    e.printStackTrace();
+                    showError("Error parsing data: " + e.getMessage());
                 }
             }
         });
     }
 
     private void resetInfoTexts() {
-        cpuInfo.setText("CPU Usage: --");
-        memoryInfo.setText("Memory Usage: --");
-        diskInfo.setText("Disk Space: --");
-        gpu1Info.setText("GPU 1 (RTX 3090): --");
-        gpu1MemoryInfo.setText("GPU 1 Memory: --");
-        gpu2Info.setText("GPU 2 (RTX 3090): --");
-        gpu2MemoryInfo.setText("GPU 2 Memory: --");
+        cpuProgress.setProgress(0);
+        memoryProgress.setProgress(0);
+        diskProgress.setProgress(0);
+        gpu1Progress.setProgress(0);
+        gpu2Progress.setProgress(0);
     }
 
     private void showError(final String message) {
