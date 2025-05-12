@@ -3,7 +3,9 @@ package com.systeminfo.display;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
+import android.graphics.Region;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
@@ -22,6 +24,10 @@ public class CircularProgressView extends View {
     private String label = "";
     private String memoryUsed = "";
     private boolean isGpu = false;
+    private static final int HISTORY_SIZE = 60;
+    private final float[] utilizationHistory = new float[HISTORY_SIZE];
+    private int historyIndex = 0;
+    private boolean historyInitialized = false;
 
     public CircularProgressView(Context context) {
         super(context);
@@ -91,6 +97,9 @@ public class CircularProgressView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         
+        // Draw utilization graph as background for the usage circle (centered, clipped)
+        drawUtilizationGraph(canvas, rectF);
+
         if (isGpu) {
             // Draw memory background circle
             canvas.drawArc(memoryRectF, 0, 360, false, backgroundPaint);
@@ -150,6 +159,54 @@ public class CircularProgressView extends View {
         }
     }
 
+    private void drawUtilizationGraph(Canvas canvas, RectF bounds) {
+        // Clip to the circle so the graph doesn't draw outside
+        int save = canvas.save();
+        Path clipPath = new Path();
+        float cx = bounds.centerX();
+        float cy = bounds.centerY();
+        float radius = (bounds.width() / 2f);
+        clipPath.addCircle(cx, cy, radius, Path.Direction.CW);
+        canvas.clipPath(clipPath, Region.Op.INTERSECT);
+
+        // Draw the filled graph (lighter than outline)
+        Paint graphPaint = new Paint();
+        graphPaint.setColor(0xFFF2F2F2); // Lighter gray for graph fill
+        graphPaint.setStyle(Paint.Style.FILL);
+        graphPaint.setAntiAlias(true);
+
+        float graphLeft = bounds.left;
+        float graphTop = bounds.top;
+        float graphRight = bounds.right;
+        float graphBottom = bounds.bottom;
+        float graphWidth = graphRight - graphLeft;
+        float graphHeight = graphBottom - graphTop;
+
+        Path graphPath = new Path();
+        graphPath.moveTo(graphLeft, graphBottom);
+        int count = historyInitialized ? HISTORY_SIZE : historyIndex;
+        float step = count > 1 ? graphWidth / (count - 1) : graphWidth;
+        for (int i = 0; i < count; i++) {
+            int idx = (historyIndex + i) % HISTORY_SIZE;
+            float x = graphLeft + i * step;
+            float y = graphBottom - (utilizationHistory[idx] / 100f) * graphHeight;
+            graphPath.lineTo(x, y);
+        }
+        graphPath.lineTo(graphRight, graphBottom);
+        graphPath.close();
+        canvas.drawPath(graphPath, graphPaint);
+
+        // Draw a thin, darker border for the graph
+        Paint borderPaint = new Paint();
+        borderPaint.setColor(0xFFB0B0B0); // Darker gray for border
+        borderPaint.setStyle(Paint.Style.STROKE);
+        borderPaint.setStrokeWidth(2f);
+        borderPaint.setAntiAlias(true);
+        canvas.drawPath(graphPath, borderPaint);
+
+        canvas.restoreToCount(save);
+    }
+
     public void setProgress(float progress) {
         this.progress = progress;
         invalidate();
@@ -168,6 +225,18 @@ public class CircularProgressView extends View {
 
     public void setMemoryUsed(String memoryUsed) {
         this.memoryUsed = memoryUsed;
+        invalidate();
+    }
+
+    /**
+     * Add a new utilization sample (0-100).
+     * Call this periodically to update the graph.
+     * For GPU circles, pass GPU utilization; for others, pass CPU or relevant value.
+     */
+    public void addUtilizationSample(float utilization) {
+        utilizationHistory[historyIndex] = utilization;
+        historyIndex = (historyIndex + 1) % HISTORY_SIZE;
+        if (!historyInitialized && historyIndex == 0) historyInitialized = true;
         invalidate();
     }
 } 

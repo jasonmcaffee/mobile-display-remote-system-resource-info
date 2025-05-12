@@ -219,12 +219,14 @@ public class MainActivity extends Activity implements SensorEventListener {
                     if (data.has("cpuUsage")) {
                         float cpuUsage = data.get("cpuUsage").getAsFloat();
                         cpuProgress.setProgress(cpuUsage);
+                        cpuProgress.addUtilizationSample(cpuUsage);
                     }
                     
                     // Update Memory
                     if (data.has("memoryUsage")) {
                         float memoryUsage = data.get("memoryUsage").getAsFloat();
                         memoryProgress.setProgress(memoryUsage);
+                        // No utilization graph for memoryProgress
                     }
                     
                     // Update GPU 1
@@ -233,6 +235,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                         if (gpu1.has("usage")) {
                             float gpu1Usage = gpu1.get("usage").getAsFloat();
                             gpu1Progress.setProgress(gpu1Usage);
+                            gpu1Progress.addUtilizationSample(gpu1Usage);
                             
                             // Update GPU 1 label and memory progress
                             if (gpu1.has("memoryUsed") && gpu1.has("memoryTotal") && gpu1.has("memoryPercent")) {
@@ -251,6 +254,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                         if (gpu2.has("usage")) {
                             float gpu2Usage = gpu2.get("usage").getAsFloat();
                             gpu2Progress.setProgress(gpu2Usage);
+                            gpu2Progress.addUtilizationSample(gpu2Usage);
                             
                             // Update GPU 2 label and memory progress
                             if (gpu2.has("memoryUsed") && gpu2.has("memoryTotal") && gpu2.has("memoryPercent")) {
