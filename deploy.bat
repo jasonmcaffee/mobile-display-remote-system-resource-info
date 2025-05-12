@@ -18,7 +18,7 @@ if "%DEVICE_ID%"=="" (
 echo Found device: %DEVICE_ID%
 echo.
 echo Installing app on device...
-adb -s %DEVICE_ID% install app/build/outputs/apk/debug/app-debug.apk
+adb -s %DEVICE_ID% install -r app/build/outputs/apk/debug/app-debug.apk
 
 echo.
 echo Launching app...

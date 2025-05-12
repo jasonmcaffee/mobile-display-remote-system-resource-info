@@ -4,10 +4,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.support.v7.app.AppCompatActivity;
+import android.app.Activity;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import okhttp3.OkHttpClient;
@@ -16,7 +18,7 @@ import okhttp3.Response;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
     private TextView statusText;
     private TextView cpuInfo;
     private TextView memoryInfo;
@@ -28,11 +30,22 @@ public class MainActivity extends AppCompatActivity {
     private Handler handler;
     private boolean isConnected = false;
     private static final String SERVER_URL = "http://192.168.0.157:8080/system-info"; // Updated with your PC's IP
+    private View decorView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // This must be called before setContentView
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                           WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        
         setContentView(R.layout.activity_main);
+
+        // For API 16+ hide the status bar
+        decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
 
         // Initialize views
         statusText = findViewById(R.id.statusText);
@@ -65,6 +78,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Re-apply in case system cleared it
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
     }
 
     private void startPolling() {
