@@ -1,0 +1,2 @@
+rootProject.name = "android-display"
+include ':app' 
