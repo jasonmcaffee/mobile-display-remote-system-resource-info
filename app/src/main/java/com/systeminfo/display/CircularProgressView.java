@@ -9,12 +9,9 @@ import android.util.AttributeSet;
 import android.view.View;
 
 public class CircularProgressView extends View {
-    private Paint backgroundPaint;
-    private Paint progressPaint;
     private Paint memoryPaint;
     private Paint textPaint;
     private Paint labelBackgroundPaint;
-    private RectF rectF;
     private RectF memoryRectF;
     private RectF labelRectF;
     private float progress = 0;
@@ -23,6 +20,8 @@ public class CircularProgressView extends View {
     private String memoryUsed = "";
     private boolean isGpu = false;
     private UtilizationGraph utilizationGraph;
+    private StatCircle usageCircle;
+    private StatCircle memoryCircle;
 
     public CircularProgressView(Context context) {
         super(context);
@@ -35,22 +34,10 @@ public class CircularProgressView extends View {
     }
 
     private void init() {
-        backgroundPaint = new Paint();
-        backgroundPaint.setColor(0xFFE0E0E0); // Light gray background
-        backgroundPaint.setStyle(Paint.Style.STROKE);
-        backgroundPaint.setStrokeWidth(12f);
-        backgroundPaint.setAntiAlias(true);
-
         labelBackgroundPaint = new Paint();
         labelBackgroundPaint.setColor(0xFF000000); // Black background
         labelBackgroundPaint.setStyle(Paint.Style.FILL);
         labelBackgroundPaint.setAntiAlias(true);
-
-        progressPaint = new Paint();
-        progressPaint.setColor(0xFF222222); // Very dark gray/black for progress
-        progressPaint.setStyle(Paint.Style.STROKE);
-        progressPaint.setStrokeWidth(12f);
-        progressPaint.setAntiAlias(true);
 
         memoryPaint = new Paint();
         memoryPaint.setColor(0xFF222222); // Use same as progress for consistency
@@ -64,10 +51,14 @@ public class CircularProgressView extends View {
         textPaint.setAntiAlias(true);
         textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
 
-        rectF = new RectF();
         memoryRectF = new RectF();
         labelRectF = new RectF();
         utilizationGraph = new UtilizationGraph();
+        
+        // Initialize circles with different padding
+        usageCircle = new StatCircle(8f);
+        memoryCircle = new StatCircle(16f);
+        
         setBackgroundColor(0xFFFFFFFF); // White background
     }
 
@@ -83,10 +74,9 @@ public class CircularProgressView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        float padding = 8f;
-        float memoryPadding = 16f; // Slightly larger for the outer circle
-        rectF.set(padding, padding, w - padding, h - padding);
-        memoryRectF.set(memoryPadding, memoryPadding, w - memoryPadding, h - memoryPadding);
+        usageCircle.setSize(w, h);
+        memoryCircle.setSize(w, h);
+        memoryRectF.set(16f, 16f, w - 16f, h - 16f);
     }
 
     @Override
@@ -94,21 +84,15 @@ public class CircularProgressView extends View {
         super.onDraw(canvas);
         
         // Draw utilization graph as background for the usage circle (centered, clipped)
-        utilizationGraph.draw(canvas, rectF);
+        utilizationGraph.draw(canvas, usageCircle.getRectF());
 
         if (isGpu) {
-            // Draw memory background circle
-            canvas.drawArc(memoryRectF, 0, 360, false, backgroundPaint);
-            
-            // Draw memory progress arc
-            canvas.drawArc(memoryRectF, -90, memoryProgress * 3.6f, false, memoryPaint);
+            // Draw memory circle
+            memoryCircle.draw(canvas);
         }
         
-        // Draw usage background circle
-        canvas.drawArc(rectF, 0, 360, false, backgroundPaint);
-        
-        // Draw usage progress arc
-        canvas.drawArc(rectF, -90, progress * 3.6f, false, progressPaint);
+        // Draw usage circle
+        usageCircle.draw(canvas);
 
         // Draw label at the top (all caps, bold)
         textPaint.setTextSize(getWidth() / 14f);
@@ -157,12 +141,14 @@ public class CircularProgressView extends View {
 
     public void setProgress(float progress) {
         this.progress = progress;
+        usageCircle.setProgress(progress);
         utilizationGraph.initializeWithValue(progress);
         invalidate();
     }
 
     public void setMemoryProgress(float progress) {
         this.memoryProgress = progress;
+        memoryCircle.setProgress(progress);
         invalidate();
     }
 
