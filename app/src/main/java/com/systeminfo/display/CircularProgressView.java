@@ -13,8 +13,10 @@ public class CircularProgressView extends View {
     private Paint progressPaint;
     private Paint memoryPaint;
     private Paint textPaint;
+    private Paint labelBackgroundPaint;
     private RectF rectF;
     private RectF memoryRectF;
+    private RectF labelRectF;
     private float progress = 0;
     private float memoryProgress = 0;
     private String label = "";
@@ -38,6 +40,11 @@ public class CircularProgressView extends View {
         backgroundPaint.setStrokeWidth(12f);
         backgroundPaint.setAntiAlias(true);
 
+        labelBackgroundPaint = new Paint();
+        labelBackgroundPaint.setColor(0xFF000000); // Black background
+        labelBackgroundPaint.setStyle(Paint.Style.FILL);
+        labelBackgroundPaint.setAntiAlias(true);
+
         progressPaint = new Paint();
         progressPaint.setColor(0xFF222222); // Very dark gray/black for progress
         progressPaint.setStyle(Paint.Style.STROKE);
@@ -58,6 +65,7 @@ public class CircularProgressView extends View {
 
         rectF = new RectF();
         memoryRectF = new RectF();
+        labelRectF = new RectF();
         setBackgroundColor(0xFFFFFFFF); // White background
     }
 
@@ -101,10 +109,32 @@ public class CircularProgressView extends View {
         textPaint.setTextSize(getWidth() / 14f);
         textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
         String labelText = label == null ? "" : label.toUpperCase();
-        float labelY = getHeight() / 6f;
-        canvas.drawText(labelText, getWidth() / 2f, labelY, textPaint);
+        
+        // Adjust vertical position based on whether it's GPU or not
+        float labelY = isGpu ? getHeight() / 5.5f : getHeight() / 6f;
+        
+        // Calculate text bounds for the label background
+        float textWidth = textPaint.measureText(labelText);
+        float padding = getWidth() / 40f; // Padding around text
+        float textHeight = textPaint.getTextSize();
+        
+        // Center the text vertically within its background
+        labelRectF.set(
+            getWidth() / 2f - textWidth / 2f - padding,
+            labelY - textHeight / 2f - padding,
+            getWidth() / 2f + textWidth / 2f + padding,
+            labelY + textHeight / 2f + padding
+        );
+        
+        // Draw black background for label
+        canvas.drawRoundRect(labelRectF, padding, padding, labelBackgroundPaint);
+        
+        // Draw label text in white
+        textPaint.setColor(0xFFFFFFFF);
+        canvas.drawText(labelText, getWidth() / 2f, labelY + textHeight / 3f, textPaint);
 
         // Draw value in the center
+        textPaint.setColor(0xFF111111); // Reset to black for percentage text
         if (isGpu) {
             textPaint.setTextSize(getWidth() / 8f);
             textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
