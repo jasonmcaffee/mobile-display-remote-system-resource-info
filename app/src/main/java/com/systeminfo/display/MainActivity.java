@@ -10,6 +10,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.app.Activity;
+import android.os.PowerManager;
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import okhttp3.OkHttpClient;
@@ -18,7 +25,10 @@ import okhttp3.Response;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements SensorEventListener {
+    private static final String TAG = "MainActivity";
+    private static final float FLAT_THRESHOLD = 1.5f; // Threshold for detecting flat position
+
     private TextView statusText;
     private TextView cpuInfo;
     private TextView memoryInfo;
@@ -31,10 +41,30 @@ public class MainActivity extends Activity {
     private boolean isConnected = false;
     private static final String SERVER_URL = "http://192.168.0.157:8080/system-info"; // Updated with your PC's IP
     private View decorView;
+    
+    private PowerManager.WakeLock wakeLock;
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+    private boolean isFlat = false;
+    private boolean wakeLockAcquired = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Initialize sensor manager and accelerometer
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (sensorManager != null) {
+            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        }
+        
+        // Initialize WakeLock with FULL_WAKE_LOCK (deprecated but works on older devices)
+        PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(
+            PowerManager.FULL_WAKE_LOCK | 
+            PowerManager.ACQUIRE_CAUSES_WAKEUP |
+            PowerManager.ON_AFTER_RELEASE,
+            "SystemInfoDisplay:WakeLockTag");
         
         // This must be called before setContentView
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -85,6 +115,67 @@ public class MainActivity extends Activity {
         super.onResume();
         // Re-apply in case system cleared it
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+        // Register sensor listener
+        if (accelerometer != null) {
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Unregister sensor listener
+        sensorManager.unregisterListener(this);
+        // Release wake lock if held
+        releaseWakeLock();
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+            
+            // Check if phone is laid flat (z-axis points up with gravity ~9.8 m/s²)
+            // and x and y values are close to 0
+            boolean nowFlat = (Math.abs(z) > 9.0f) && 
+                            (Math.abs(x) < FLAT_THRESHOLD) && 
+                            (Math.abs(y) < FLAT_THRESHOLD);
+            
+            // Only take action if the state changes
+            if (nowFlat != isFlat) {
+                isFlat = nowFlat;
+                if (isFlat) {
+                    // Phone is now flat, acquire wake lock
+                    acquireWakeLock();
+                    Log.d(TAG, "Phone is flat - keeping screen on");
+                } else {
+                    // Phone is no longer flat, release wake lock
+                    releaseWakeLock();
+                    Log.d(TAG, "Phone is not flat - allowing screen to time out");
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // Not used in this implementation
+    }
+    
+    private void acquireWakeLock() {
+        if (!wakeLockAcquired && wakeLock != null) {
+            wakeLock.acquire();
+            wakeLockAcquired = true;
+        }
+    }
+    
+    private void releaseWakeLock() {
+        if (wakeLockAcquired && wakeLock != null && wakeLock.isHeld()) {
+            wakeLock.release();
+            wakeLockAcquired = false;
+        }
     }
 
     private void startPolling() {
@@ -169,5 +260,6 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         stopPolling();
+        releaseWakeLock();
     }
 } 
