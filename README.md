@@ -115,6 +115,35 @@ A system information display application for Android devices that shows real-tim
    adb -s 0146A54914015003 shell am start -n com.systeminfo.display/com.systeminfo.display.MainActivity
    ```
 
+### Starting the Python Server
+
+1. Navigate to the server directory:
+   ```powershell
+   cd server
+   ```
+
+2. Create virtual environment:
+   ```powershell
+   python -m venv venv310
+   ```
+
+3. Activate virtual environment:
+   ```powershell
+   .\venv310\Scripts\activate
+   ```
+
+4. Install dependencies:
+   ```powershell
+   pip install -r requirements.txt
+   ```
+
+5. Start the server:
+   ```powershell
+   python system_info_server.py
+   ```
+
+The server will start on `http://localhost:5000` and provide system information via HTTP API endpoints.
+
 ## Development
 
 The project consists of two main components:
