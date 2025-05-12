@@ -28,7 +28,6 @@ public class MainActivity extends Activity implements SensorEventListener {
     private static final String TAG = "MainActivity";
     private static final float FLAT_THRESHOLD = 1.5f; // Threshold for detecting flat position
 
-    private TextView statusText;
     private TextView cpuInfo;
     private TextView memoryInfo;
     private TextView diskInfo;
@@ -76,7 +75,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
 
         // Initialize views
-        statusText = findViewById(R.id.statusText);
         cpuInfo = findViewById(R.id.cpuInfo);
         memoryInfo = findViewById(R.id.memoryInfo);
         diskInfo = findViewById(R.id.diskInfo);
@@ -94,7 +92,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         // Automatically start polling when the app starts
         startPolling();
         isConnected = true;
-        statusText.setText("Status: Connected");
     }
 
     @Override
@@ -110,7 +107,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         if (!isConnected) {
             startPolling();
             isConnected = true;
-            statusText.setText("Status: Connected");
         }
     }
 
@@ -185,7 +181,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     private void stopPolling() {
         handler.removeCallbacksAndMessages(null);
-        statusText.setText("Status: Disconnected");
         resetInfoTexts();
     }
 
@@ -218,7 +213,6 @@ public class MainActivity extends Activity implements SensorEventListener {
             public void run() {
                 try {
                     JsonObject data = new Gson().fromJson(jsonData, JsonObject.class);
-                    statusText.setText("Status: Connected");
                     cpuInfo.setText("CPU Usage: " + data.get("cpuUsage").getAsString() + "%");
                     memoryInfo.setText("Memory Usage: " + data.get("memoryUsage").getAsString() + "%");
                     diskInfo.setText("Disk Space: " + data.get("diskSpace").getAsString());
@@ -244,7 +238,6 @@ public class MainActivity extends Activity implements SensorEventListener {
             @Override
             public void run() {
                 Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
-                statusText.setText("Status: Error");
             }
         });
     }
