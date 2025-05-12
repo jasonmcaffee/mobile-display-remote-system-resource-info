@@ -31,8 +31,6 @@ public class MainActivity extends Activity implements SensorEventListener {
     private TextView cpuInfo;
     private TextView memoryInfo;
     private TextView diskInfo;
-    private TextView networkInfo;
-    private TextView uptimeInfo;
     private OkHttpClient client;
     private Handler handler;
     private boolean isConnected = false;
@@ -78,8 +76,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         cpuInfo = findViewById(R.id.cpuInfo);
         memoryInfo = findViewById(R.id.memoryInfo);
         diskInfo = findViewById(R.id.diskInfo);
-        networkInfo = findViewById(R.id.networkInfo);
-        uptimeInfo = findViewById(R.id.uptimeInfo);
 
         // Initialize OkHttpClient
         client = new OkHttpClient.Builder()
@@ -216,8 +212,6 @@ public class MainActivity extends Activity implements SensorEventListener {
                     cpuInfo.setText("CPU Usage: " + data.get("cpuUsage").getAsString() + "%");
                     memoryInfo.setText("Memory Usage: " + data.get("memoryUsage").getAsString() + "%");
                     diskInfo.setText("Disk Space: " + data.get("diskSpace").getAsString());
-                    networkInfo.setText("Network Status: " + data.get("networkStatus").getAsString());
-                    uptimeInfo.setText("System Uptime: " + data.get("uptime").getAsString());
                 } catch (Exception e) {
                     showError("Error parsing data");
                 }
@@ -229,8 +223,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         cpuInfo.setText("CPU Usage: --");
         memoryInfo.setText("Memory Usage: --");
         diskInfo.setText("Disk Space: --");
-        networkInfo.setText("Network Status: --");
-        uptimeInfo.setText("System Uptime: --");
     }
 
     private void showError(final String message) {
