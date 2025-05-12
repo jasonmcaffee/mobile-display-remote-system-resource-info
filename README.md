@@ -142,7 +142,7 @@ A system information display application for Android devices that shows real-tim
    python system_info_server.py
    ```
 
-The server will start on `http://localhost:5000` and provide system information via HTTP API endpoints.
+The server will start on `http://localhost:8080` and provide system information via HTTP API endpoints.
 
 ## Development
 
