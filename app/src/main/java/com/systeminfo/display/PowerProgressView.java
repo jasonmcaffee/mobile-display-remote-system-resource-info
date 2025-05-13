@@ -8,19 +8,21 @@ public class PowerProgressView extends CircularProgressView {
 
     public PowerProgressView(Context context) {
         super(context);
-        init();
+        initPowerCircle();
     }
 
     public PowerProgressView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        initPowerCircle();
     }
 
-    private void init() {
+    private void initPowerCircle() {
         // Initialize power circle with larger padding to make it smaller
         powerCircle = new StatCircle(24f);
         powerCircle.setLabel("PWR");
         powerCircle.setShowPercentage(false); // Don't show percentage in the center
+        // Clear the background color set by parent
+        setBackgroundColor(0x00000000); // Transparent background
     }
 
     @Override
