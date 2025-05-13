@@ -32,18 +32,21 @@ public class StatCircle {
         backgroundPaint.setStyle(Paint.Style.STROKE);
         backgroundPaint.setStrokeWidth(12f);
         backgroundPaint.setAntiAlias(true);
+        backgroundPaint.setStrokeCap(Paint.Cap.BUTT);
 
         progressPaint = new Paint();
         progressPaint.setColor(0xFF222222); // Very dark gray/black for progress
         progressPaint.setStyle(Paint.Style.STROKE);
         progressPaint.setStrokeWidth(12f);
         progressPaint.setAntiAlias(true);
+        progressPaint.setStrokeCap(Paint.Cap.BUTT);
 
         gpuMemoryPaint = new Paint();
         gpuMemoryPaint.setColor(0xFF808080); // Darker gray for GPU memory
         gpuMemoryPaint.setStyle(Paint.Style.STROKE);
         gpuMemoryPaint.setStrokeWidth(12f);
         gpuMemoryPaint.setAntiAlias(true);
+        gpuMemoryPaint.setStrokeCap(Paint.Cap.BUTT);
 
         labelBackgroundPaint = new Paint();
         labelBackgroundPaint.setColor(0xFF000000); // Black background
@@ -71,11 +74,20 @@ public class StatCircle {
 
         // Draw background circle
         canvas.drawArc(rectF, 0, 360, false, backgroundPaint);
-        // Draw GPU memory arc for GPU circles
+        
+        // For GPU circles, draw memory arc on a slightly smaller rectF
         if (isGpu && gpuMemoryPercent > 0) {
-            canvas.drawArc(rectF, -90, gpuMemoryPercent * 3.6f, false, gpuMemoryPaint);
+            float borderInset = 3f; // half of 6f stroke width
+            RectF memoryRectF = new RectF(
+                rectF.left + borderInset,
+                rectF.top + borderInset,
+                rectF.right - borderInset,
+                rectF.bottom - borderInset
+            );
+            canvas.drawArc(memoryRectF, -90, gpuMemoryPercent * 3.6f, false, gpuMemoryPaint);
         }
-        // Draw progress arc
+        
+        // Draw progress arc on the original rectF
         canvas.drawArc(rectF, -90, progress * 3.6f, false, progressPaint);
 
         // Draw label at the top (all caps, bold)
@@ -144,8 +156,8 @@ public class StatCircle {
         this.isGpu = label != null && label.startsWith("GPU");
         if (isGpu) {
             backgroundPaint.setStrokeWidth(12f);
-            progressPaint.setStrokeWidth(12f);
-            gpuMemoryPaint.setStrokeWidth(12f);
+            progressPaint.setStrokeWidth(6f);  // Exactly half width
+            gpuMemoryPaint.setStrokeWidth(6f); // Exactly half width
         } else {
             backgroundPaint.setStrokeWidth(12f);
             progressPaint.setStrokeWidth(12f);
