@@ -44,8 +44,8 @@ public class UtilizationGraph {
             float graphTop = cy - graphRadius;
             float graphWidth = graphRight - graphLeft;
             float graphHeight = graphBottom - graphTop;
-            float baselineY = graphTop + (graphHeight * 0.45f);
-            float availableHeight = graphBottom - baselineY;
+            float baselineY = graphBottom;
+            float availableHeight = graphHeight;
 
             int count = historyInitialized ? HISTORY_SIZE : historyIndex;
             if (count < 2) return;
@@ -109,7 +109,7 @@ public class UtilizationGraph {
             Paint graphBorderPaint = new Paint();
             graphBorderPaint.setColor(0xFFE0E0E0); // Slightly darker than the graph color
             graphBorderPaint.setStyle(Paint.Style.STROKE);
-            graphBorderPaint.setStrokeWidth(1f);
+            graphBorderPaint.setStrokeWidth(0.5f);
             graphBorderPaint.setAntiAlias(true);
             canvas.drawPath(bowlPath, graphBorderPaint);
 
@@ -117,7 +117,7 @@ public class UtilizationGraph {
             Paint borderPaint = new Paint();
             borderPaint.setColor(0xFFB0B0B0);
             borderPaint.setStyle(Paint.Style.STROKE);
-            borderPaint.setStrokeWidth(2f);
+            borderPaint.setStrokeWidth(0.5f);
             borderPaint.setAntiAlias(true);
             canvas.drawCircle(cx, cy, graphRadius, borderPaint);
 

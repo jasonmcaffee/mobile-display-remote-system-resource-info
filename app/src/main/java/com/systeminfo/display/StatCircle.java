@@ -10,6 +10,7 @@ public class StatCircle {
     private Paint progressPaint;
     private Paint textPaint;
     private Paint labelBackgroundPaint;
+    private Paint gpuMemoryPaint;
     private RectF rectF;
     private RectF labelRectF;
     private float progress = 0;
@@ -18,6 +19,7 @@ public class StatCircle {
     private String memoryUsed = "";
     private boolean isGpu = false;
     private UtilizationGraph utilizationGraph;
+    private float gpuMemoryPercent = 0f;
 
     public StatCircle(float padding) {
         this.padding = padding;
@@ -36,6 +38,12 @@ public class StatCircle {
         progressPaint.setStyle(Paint.Style.STROKE);
         progressPaint.setStrokeWidth(12f);
         progressPaint.setAntiAlias(true);
+
+        gpuMemoryPaint = new Paint();
+        gpuMemoryPaint.setColor(0xFF808080); // Darker gray for GPU memory
+        gpuMemoryPaint.setStyle(Paint.Style.STROKE);
+        gpuMemoryPaint.setStrokeWidth(12f);
+        gpuMemoryPaint.setAntiAlias(true);
 
         labelBackgroundPaint = new Paint();
         labelBackgroundPaint.setColor(0xFF000000); // Black background
@@ -63,7 +71,10 @@ public class StatCircle {
 
         // Draw background circle
         canvas.drawArc(rectF, 0, 360, false, backgroundPaint);
-        
+        // Draw GPU memory arc for GPU circles
+        if (isGpu && gpuMemoryPercent > 0) {
+            canvas.drawArc(rectF, -90, gpuMemoryPercent * 3.6f, false, gpuMemoryPaint);
+        }
         // Draw progress arc
         canvas.drawArc(rectF, -90, progress * 3.6f, false, progressPaint);
 
@@ -117,9 +128,29 @@ public class StatCircle {
         utilizationGraph.initializeWithValue(progress);
     }
 
+    public void setMemoryProgress(float progress) {
+        if (isGpu) {
+            // For GPU circles, this sets the GPU memory border
+            setGpuMemoryPercent(progress);
+        } else {
+            // For main memory circle, this sets the main progress
+            this.progress = progress;
+            utilizationGraph.initializeWithValue(progress);
+        }
+    }
+
     public void setLabel(String label) {
         this.label = label;
         this.isGpu = label != null && label.startsWith("GPU");
+        if (isGpu) {
+            backgroundPaint.setStrokeWidth(12f);
+            progressPaint.setStrokeWidth(12f);
+            gpuMemoryPaint.setStrokeWidth(12f);
+        } else {
+            backgroundPaint.setStrokeWidth(12f);
+            progressPaint.setStrokeWidth(12f);
+            gpuMemoryPaint.setStrokeWidth(12f);
+        }
     }
 
     public void setMemoryUsed(String memoryUsed) {
@@ -136,5 +167,9 @@ public class StatCircle {
 
     public boolean isGpu() {
         return isGpu;
+    }
+
+    public void setGpuMemoryPercent(float percent) {
+        this.gpuMemoryPercent = percent;
     }
 } 

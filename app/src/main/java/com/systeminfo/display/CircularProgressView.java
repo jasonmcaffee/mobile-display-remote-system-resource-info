@@ -57,7 +57,17 @@ public class CircularProgressView extends View {
     }
 
     public void setMemoryProgress(float progress) {
-        memoryCircle.setProgress(progress);
+        if (usageCircle.isGpu()) {
+            // For GPU circles, update the memory circle with memory usage
+            memoryCircle.setProgress(progress);
+            memoryCircle.addUtilizationSample(progress);
+            // Also update the usage circle's memory border
+            usageCircle.setMemoryProgress(progress);
+        } else {
+            // For main memory circle, update the usage circle
+            usageCircle.setProgress(progress);
+            usageCircle.addUtilizationSample(progress);
+        }
         invalidate();
     }
 
