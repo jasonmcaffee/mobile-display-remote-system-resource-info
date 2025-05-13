@@ -21,6 +21,7 @@ public class PowerProgressView extends CircularProgressView {
         powerCircle = new StatCircle(24f);
         powerCircle.setLabel("PWR");
         powerCircle.setShowPercentage(false); // Don't show percentage in the center
+        powerCircle.setLabelPositionMultiplier(1.5f); // Move label down by 50%
         // Clear the background color set by parent
         setBackgroundColor(0x00000000); // Transparent background
     }

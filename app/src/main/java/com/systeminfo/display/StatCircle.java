@@ -21,6 +21,7 @@ public class StatCircle {
     private UtilizationGraph utilizationGraph;
     private float gpuMemoryPercent = 0f;
     private boolean showPercentage = true;
+    private float labelPositionMultiplier = 1.0f; // Default multiplier
 
     public StatCircle(float padding) {
         this.padding = padding;
@@ -107,8 +108,8 @@ public class StatCircle {
         textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
         String labelText = label == null ? "" : label.toUpperCase();
         
-        // Adjust vertical position based on whether it's GPU or not
-        float labelY = isGpu ? rectF.height() / 5.5f : rectF.height() / 6f;
+        // Adjust vertical position based on whether it's GPU or not, and apply custom multiplier
+        float labelY = (isGpu ? rectF.height() / 5.5f : rectF.height() / 6f) * labelPositionMultiplier;
         
         // Calculate text bounds for the label background
         float textWidth = textPaint.measureText(labelText);
@@ -206,5 +207,9 @@ public class StatCircle {
 
     public void setShowPercentage(boolean show) {
         this.showPercentage = show;
+    }
+
+    public void setLabelPositionMultiplier(float multiplier) {
+        this.labelPositionMultiplier = multiplier;
     }
 } 
