@@ -87,8 +87,19 @@ public class StatCircle {
             canvas.drawArc(memoryRectF, -90, gpuMemoryPercent * 3.6f, false, gpuMemoryPaint);
         }
         
-        // Draw progress arc on the original rectF
-        canvas.drawArc(rectF, -90, progress * 3.6f, false, progressPaint);
+        // Draw progress arc on a slightly larger rectF so it touches the outer edge
+        if (isGpu) {
+            float borderInset = 3f;
+            RectF progressRectF = new RectF(
+                rectF.left - borderInset,
+                rectF.top - borderInset,
+                rectF.right + borderInset,
+                rectF.bottom + borderInset
+            );
+            canvas.drawArc(progressRectF, -90, progress * 3.6f, false, progressPaint);
+        } else {
+            canvas.drawArc(rectF, -90, progress * 3.6f, false, progressPaint);
+        }
 
         // Draw label at the top (all caps, bold)
         textPaint.setTextSize(rectF.width() / 14f);
