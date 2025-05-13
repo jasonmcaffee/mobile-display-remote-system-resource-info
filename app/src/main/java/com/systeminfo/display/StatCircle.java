@@ -147,9 +147,16 @@ public class StatCircle {
                 float percentY = rectF.centerY() + rectF.width() / 14f;
                 canvas.drawText(percentText, rectF.centerX(), percentY, textPaint);
             } else {
-                // Just show the memory used value (which will be the power value for power circle)
-                float valueY = rectF.centerY() + rectF.width() / 14f;
-                canvas.drawText(memoryUsed, rectF.centerX(), valueY, textPaint);
+                // Handle multi-line text for power display
+                String[] lines = memoryUsed.split("\n");
+                float lineHeight = textPaint.getTextSize() * 1.2f; // Add 20% spacing between lines
+                float totalHeight = lineHeight * lines.length;
+                float startY = rectF.centerY() + rectF.width() / 14f - (totalHeight / 2f) + (lineHeight / 2f);
+                
+                for (String line : lines) {
+                    canvas.drawText(line, rectF.centerX(), startY, textPaint);
+                    startY += lineHeight;
+                }
             }
         }
     }

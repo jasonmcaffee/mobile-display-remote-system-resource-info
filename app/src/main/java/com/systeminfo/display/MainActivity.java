@@ -284,6 +284,12 @@ public class MainActivity extends Activity implements SensorEventListener {
                         
                         // Display just the power value in watts
                         powerProgress.setPowerUsed(String.format("%.0fW", totalPower));
+
+                        // Update power cost if available
+                        if (data.has("totalPowerCostInDollarsPerMonth")) {
+                            String cost = data.getString("totalPowerCostInDollarsPerMonth");
+                            powerProgress.setPowerCost(String.format("$%s", cost));
+                        }
                     }
                     
                 } catch (JSONException e) {

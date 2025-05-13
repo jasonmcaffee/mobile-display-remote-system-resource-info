@@ -5,6 +5,8 @@ import android.util.AttributeSet;
 
 public class PowerProgressView extends CircularProgressView {
     private StatCircle powerCircle;
+    private String powerCost = "";
+    private String currentPower = "";
 
     public PowerProgressView(Context context) {
         super(context);
@@ -45,7 +47,22 @@ public class PowerProgressView extends CircularProgressView {
     }
 
     public void setPowerUsed(String powerUsed) {
-        powerCircle.setMemoryUsed(powerUsed);
+        this.currentPower = powerUsed;
+        updateDisplay();
+    }
+
+    public void setPowerCost(String cost) {
+        this.powerCost = cost;
+        updateDisplay();
+    }
+
+    private void updateDisplay() {
+        // Combine power usage and cost into a single string with newline
+        String displayText = currentPower;
+        if (!powerCost.isEmpty()) {
+            displayText += "\n" + powerCost;
+        }
+        powerCircle.setMemoryUsed(displayText);
         invalidate();
     }
 } 
