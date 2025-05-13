@@ -18,8 +18,8 @@ def get_size(bytes, suffix="B"):
 
 def get_gpu_info():
     try:
-        # Run nvidia-smi to get GPU information
-        result = subprocess.run(['nvidia-smi', '--query-gpu=utilization.gpu,memory.used,memory.total', '--format=csv,noheader,nounits'], 
+        # Run nvidia-smi to get GPU information including power usage
+        result = subprocess.run(['nvidia-smi', '--query-gpu=utilization.gpu,memory.used,memory.total,power.draw,power.limit', '--format=csv,noheader,nounits'], 
                               capture_output=True, text=True)
         
         # Parse the output for both GPUs
@@ -27,20 +27,22 @@ def get_gpu_info():
         gpu_info = {}
         
         for i, line in enumerate(gpu_lines, 1):
-            usage, mem_used, mem_total = map(float, line.split(', '))
+            usage, mem_used, mem_total, power_draw, power_limit = map(float, line.split(', '))
             gpu_info[f'gpu{i}'] = {
                 'usage': str(round(usage)),
                 'memoryUsed': str(round(mem_used / 1024, 1)),  # Convert MB to GB
                 'memoryTotal': str(round(mem_total / 1024, 1)),  # Convert MB to GB
-                'memoryPercent': str(round((mem_used / mem_total) * 100))
+                'memoryPercent': str(round((mem_used / mem_total) * 100)),
+                'powerDraw': str(round(power_draw, 1)),  # Power draw in watts
+                'powerLimit': str(round(power_limit, 1))  # Power limit in watts
             }
         
         return gpu_info
     except Exception as e:
         print(f"Error getting GPU info: {e}")
         return {
-            'gpu1': {'usage': '0', 'memoryUsed': '0', 'memoryTotal': '24', 'memoryPercent': '0'},
-            'gpu2': {'usage': '0', 'memoryUsed': '0', 'memoryTotal': '24', 'memoryPercent': '0'}
+            'gpu1': {'usage': '0', 'memoryUsed': '0', 'memoryTotal': '24', 'memoryPercent': '0', 'powerDraw': '0', 'powerLimit': '0'},
+            'gpu2': {'usage': '0', 'memoryUsed': '0', 'memoryTotal': '24', 'memoryPercent': '0', 'powerDraw': '0', 'powerLimit': '0'}
         }
 
 def get_system_info():
@@ -59,10 +61,14 @@ def get_system_info():
         # Get GPU information
         gpu_info = get_gpu_info()
         
+        # Calculate total system power (sum of GPU power draws)
+        total_power = sum(float(gpu['powerDraw']) for gpu in gpu_info.values())
+        
         return {
             "cpuUsage": cpu_usage,
             "memoryUsage": memory_usage,
             "diskSpace": disk_space,
+            "totalPower": str(round(total_power, 1)),  # Total system power in watts
             **gpu_info  # Add GPU information to the response
         }
     except Exception as e:
