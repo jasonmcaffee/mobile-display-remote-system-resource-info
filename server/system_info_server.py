@@ -63,12 +63,14 @@ def get_system_info():
         
         # Calculate total system power (sum of GPU power draws)
         total_power = sum(float(gpu['powerDraw']) for gpu in gpu_info.values())
+        total_power_limit = sum(float(gpu['powerLimit']) for gpu in gpu_info.values())
         
         return {
             "cpuUsage": cpu_usage,
             "memoryUsage": memory_usage,
             "diskSpace": disk_space,
             "totalPower": str(round(total_power, 1)),  # Total system power in watts
+            "totalPowerLimit": str(round(total_power_limit, 1)),  # Total system power limit in watts
             **gpu_info  # Add GPU information to the response
         }
     except Exception as e:
