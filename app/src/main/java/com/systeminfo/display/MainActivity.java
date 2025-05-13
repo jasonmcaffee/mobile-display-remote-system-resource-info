@@ -24,6 +24,10 @@ import okhttp3.Response;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import android.content.pm.ActivityInfo;
+import android.graphics.Color;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class MainActivity extends Activity implements SensorEventListener {
     private static final String TAG = "MainActivity";
@@ -33,6 +37,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private CircularProgressView memoryProgress;
     private CircularProgressView gpu1Progress;
     private CircularProgressView gpu2Progress;
+    private PowerProgressView powerProgress;
     private OkHttpClient client;
     private Handler handler;
     private boolean isConnected = false;
@@ -78,6 +83,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         memoryProgress = findViewById(R.id.memoryProgress);
         gpu1Progress = findViewById(R.id.gpu1Progress);
         gpu2Progress = findViewById(R.id.gpu2Progress);
+        powerProgress = findViewById(R.id.powerProgress);
 
         // Set labels
         cpuProgress.setLabel("CPU");
@@ -213,64 +219,81 @@ public class MainActivity extends Activity implements SensorEventListener {
             @Override
             public void run() {
                 try {
-                    JsonObject data = new Gson().fromJson(jsonData, JsonObject.class);
+                    JSONObject data = new JSONObject(jsonData);
+                    Log.d(TAG, "Received data: " + jsonData);
                     
                     // Update CPU
                     if (data.has("cpuUsage")) {
-                        float cpuUsage = data.get("cpuUsage").getAsFloat();
+                        float cpuUsage = (float) data.getDouble("cpuUsage");
                         cpuProgress.setProgress(cpuUsage);
                         cpuProgress.addUtilizationSample(cpuUsage);
                     }
                     
                     // Update Memory
                     if (data.has("memoryUsage")) {
-                        float memoryUsage = data.get("memoryUsage").getAsFloat();
+                        float memoryUsage = (float) data.getDouble("memoryUsage");
                         memoryProgress.setProgress(memoryUsage);
                         memoryProgress.addUtilizationSample(memoryUsage);
                     }
                     
-                    // Update GPU 1
+                    // Update GPUs
                     if (data.has("gpu1")) {
-                        JsonObject gpu1 = data.getAsJsonObject("gpu1");
+                        JSONObject gpu1 = data.getJSONObject("gpu1");
                         if (gpu1.has("usage")) {
-                            float gpu1Usage = gpu1.get("usage").getAsFloat();
+                            float gpu1Usage = (float) gpu1.getDouble("usage");
                             gpu1Progress.setProgress(gpu1Usage);
                             gpu1Progress.addUtilizationSample(gpu1Usage);
                             
-                            // Update GPU 1 label and memory progress
+                            // Update GPU 1 memory
                             if (gpu1.has("memoryUsed") && gpu1.has("memoryTotal") && gpu1.has("memoryPercent")) {
-                                String memoryUsed = gpu1.get("memoryUsed").getAsString();
-                                float memoryPercent = gpu1.get("memoryPercent").getAsFloat();
-                                gpu1Progress.setLabel("GPU 1");
+                                String memoryUsed = gpu1.getString("memoryUsed");
+                                float memoryPercent = (float) gpu1.getDouble("memoryPercent");
                                 gpu1Progress.setMemoryUsed(memoryUsed);
                                 gpu1Progress.setMemoryProgress(memoryPercent);
                             }
                         }
                     }
                     
-                    // Update GPU 2
                     if (data.has("gpu2")) {
-                        JsonObject gpu2 = data.getAsJsonObject("gpu2");
+                        JSONObject gpu2 = data.getJSONObject("gpu2");
                         if (gpu2.has("usage")) {
-                            float gpu2Usage = gpu2.get("usage").getAsFloat();
+                            float gpu2Usage = (float) gpu2.getDouble("usage");
                             gpu2Progress.setProgress(gpu2Usage);
                             gpu2Progress.addUtilizationSample(gpu2Usage);
                             
-                            // Update GPU 2 label and memory progress
+                            // Update GPU 2 memory
                             if (gpu2.has("memoryUsed") && gpu2.has("memoryTotal") && gpu2.has("memoryPercent")) {
-                                String memoryUsed = gpu2.get("memoryUsed").getAsString();
-                                float memoryPercent = gpu2.get("memoryPercent").getAsFloat();
-                                gpu2Progress.setLabel("GPU 2");
+                                String memoryUsed = gpu2.getString("memoryUsed");
+                                float memoryPercent = (float) gpu2.getDouble("memoryPercent");
                                 gpu2Progress.setMemoryUsed(memoryUsed);
                                 gpu2Progress.setMemoryProgress(memoryPercent);
                             }
                         }
                     }
                     
-                } catch (Exception e) {
-                    Log.e(TAG, "Error parsing data: " + e.getMessage());
+                    // Update Power
+                    if (data.has("totalPower") && data.has("totalPowerLimit")) {
+                        float totalPower = Float.parseFloat(data.getString("totalPower"));
+                        float totalPowerLimit = Float.parseFloat(data.getString("totalPowerLimit"));
+                        
+                        // Calculate percentage for the border (0-100 range)
+                        float powerPercentage = (totalPower / totalPowerLimit) * 100f;
+                        Log.d(TAG, String.format("Power: %.1fW / %.1fW = %.2f%%", 
+                            totalPower, totalPowerLimit, powerPercentage));
+                        powerProgress.setPowerProgress(powerPercentage); // Pass as 0-100 range
+                        
+                        // Display just the power value in watts
+                        powerProgress.setPowerUsed(String.format("%.0fW", totalPower));
+                    }
+                    
+                } catch (JSONException e) {
+                    Log.e(TAG, "Error parsing JSON data", e);
                     e.printStackTrace();
                     showError("Error parsing data: " + e.getMessage());
+                } catch (NumberFormatException e) {
+                    Log.e(TAG, "Error parsing power values", e);
+                    e.printStackTrace();
+                    showError("Error parsing power values: " + e.getMessage());
                 }
             }
         });
@@ -281,6 +304,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         memoryProgress.setProgress(0);
         gpu1Progress.setProgress(0);
         gpu2Progress.setProgress(0);
+        powerProgress.setPowerProgress(0);
     }
 
     private void showError(final String message) {

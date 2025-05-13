@@ -20,6 +20,7 @@ public class StatCircle {
     private boolean isGpu = false;
     private UtilizationGraph utilizationGraph;
     private float gpuMemoryPercent = 0f;
+    private boolean showPercentage = true;
 
     public StatCircle(float padding) {
         this.padding = padding;
@@ -140,14 +141,21 @@ public class StatCircle {
         } else {
             textPaint.setTextSize(rectF.width() / 7f);
             textPaint.setTypeface(Typeface.create("sans-serif", Typeface.BOLD));
-            String percentText = String.format("%d%%", (int)progress);
-            float percentY = rectF.centerY() + rectF.width() / 14f;
-            canvas.drawText(percentText, rectF.centerX(), percentY, textPaint);
+            if (showPercentage) {
+                String percentText = String.format("%d%%", (int)progress);
+                float percentY = rectF.centerY() + rectF.width() / 14f;
+                canvas.drawText(percentText, rectF.centerX(), percentY, textPaint);
+            } else {
+                // Just show the memory used value (which will be the power value for power circle)
+                float valueY = rectF.centerY() + rectF.width() / 14f;
+                canvas.drawText(memoryUsed, rectF.centerX(), valueY, textPaint);
+            }
         }
     }
 
     public void setProgress(float progress) {
         this.progress = progress;
+        android.util.Log.d("StatCircle", "Setting progress to: " + progress);
         utilizationGraph.initializeWithValue(progress);
     }
 
@@ -194,5 +202,9 @@ public class StatCircle {
 
     public void setGpuMemoryPercent(float percent) {
         this.gpuMemoryPercent = percent;
+    }
+
+    public void setShowPercentage(boolean show) {
+        this.showPercentage = show;
     }
 } 
