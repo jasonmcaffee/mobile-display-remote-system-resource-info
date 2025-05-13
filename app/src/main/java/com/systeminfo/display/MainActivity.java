@@ -41,8 +41,10 @@ public class MainActivity extends Activity implements SensorEventListener {
     private OkHttpClient client;
     private Handler handler;
     private boolean isConnected = false;
-    private static final String SERVER_URL = "http://192.168.0.157:8080/system-info"; // Updated with your PC's IP
+    private static final String SERVER_URL = "http://192.168.0.157:8880/system-info"; // Updated with your PC's IP
     private View decorView;
+    private int consecutiveErrorCount = 0;
+    private static final int ERROR_THRESHOLD = 10;
     
     private PowerManager.WakeLock wakeLock;
     private SensorManager sensorManager;
@@ -204,11 +206,12 @@ public class MainActivity extends Activity implements SensorEventListener {
                     if (response.isSuccessful()) {
                         String jsonData = response.body().string();
                         updateUI(jsonData);
+                        consecutiveErrorCount = 0; // Reset error count on successful connection
                     } else {
-                        showError("Failed to fetch system info");
+                        handleConnectionError("Failed to fetch system info");
                     }
                 } catch (IOException e) {
-                    showError("Connection error: " + e.getMessage());
+                    handleConnectionError("Connection error: " + e.getMessage());
                 }
             }
         }).start();
@@ -320,6 +323,13 @@ public class MainActivity extends Activity implements SensorEventListener {
                 Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void handleConnectionError(final String message) {
+        consecutiveErrorCount++;
+        if (consecutiveErrorCount >= ERROR_THRESHOLD) {
+            showError("Unable to connect to server after multiple attempts");
+        }
     }
 
     @Override

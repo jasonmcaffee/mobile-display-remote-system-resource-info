@@ -101,8 +101,8 @@ if __name__ == '__main__':
     try:
         hostname = socket.gethostname()
         local_ip = socket.gethostbyname(hostname)
-        print(f"Server running at http://{local_ip}:8080")
+        print(f"Server running at http://{local_ip}:8880")
         print("Press Ctrl+C to stop the server")
-        app.run(host='0.0.0.0', port=8080)
+        app.run(host='0.0.0.0', port=8880)
     except Exception as e:
         print(f"Error starting server: {str(e)}") 
