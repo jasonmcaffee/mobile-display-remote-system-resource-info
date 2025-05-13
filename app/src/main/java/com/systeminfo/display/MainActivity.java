@@ -180,7 +180,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             public void run() {
                 if (isConnected) {
                     fetchSystemInfo();
-                    handler.postDelayed(this, 200); // Poll every 500ms
+                    handler.postDelayed(this, 500); // Poll every 500ms
                 }
             }
         });

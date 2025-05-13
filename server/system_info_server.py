@@ -9,6 +9,9 @@ import json
 
 app = Flask(__name__)
 
+# Cost per kilowatt-hour in cents (13 cents per kWh)
+COST_PER_KWH = 13
+
 def get_size(bytes, suffix="B"):
     factor = 1024
     for unit in ["", "K", "M", "G", "T", "P"]:
@@ -65,12 +68,23 @@ def get_system_info():
         total_power = sum(float(gpu['powerDraw']) for gpu in gpu_info.values())
         total_power_limit = sum(float(gpu['powerLimit']) for gpu in gpu_info.values())
         
+        # Calculate hourly power cost in cents
+        # Convert watts to kilowatts and multiply by cost per kWh
+        total_power_kw = total_power / 1000  # Convert watts to kilowatts
+        total_power_cost_in_cents_per_hour = total_power_kw * COST_PER_KWH
+        
+        # Calculate monthly cost in dollars (assuming 24/7 operation)
+        hours_in_month = 24 * 30  # 30 days
+        total_power_cost_in_dollars_per_month = (total_power_cost_in_cents_per_hour * hours_in_month) / 100
+        
         return {
             "cpuUsage": cpu_usage,
             "memoryUsage": memory_usage,
             "diskSpace": disk_space,
             "totalPower": str(round(total_power, 1)),  # Total system power in watts
             "totalPowerLimit": str(round(total_power_limit, 1)),  # Total system power limit in watts
+            "totalPowerCostInCentsPerHour": str(round(total_power_cost_in_cents_per_hour, 2)),  # Cost in cents per hour
+            "totalPowerCostInDollarsPerMonth": str(round(total_power_cost_in_dollars_per_month, 2)),  # Cost in dollars per month
             **gpu_info  # Add GPU information to the response
         }
     except Exception as e:
